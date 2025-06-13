@@ -91,6 +91,22 @@ module SymmetricEncryption
           FileUtils.chmod 0o666, Dir.glob("#{the_test_path}/*")
           assert_raises { keystore.read }
         end
+
+        it "does not raise an exception if file check is disabled" do
+          keystore.write("TEST")
+          FileUtils.chmod 0o666, Dir.glob("#{the_test_path}/*")
+          SymmetricEncryption.mock_env("SYMMETRIC_ENCRYPTION_KEYSTORE_BYPASS_FILE_CHECKS" => "true") do
+            assert_equal "TEST", keystore.read
+          end
+        end
+
+        it "raises exception bypassing is disabled" do
+          keystore.write("TEST")
+          FileUtils.chmod 0o666, Dir.glob("#{the_test_path}/*")
+          SymmetricEncryption.mock_env("SYMMETRIC_ENCRYPTION_KEYSTORE_BYPASS_FILE_CHECKS" => "false") do
+            assert_raises { keystore.read }
+          end
+        end
       end
     end
   end

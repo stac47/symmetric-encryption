@@ -52,17 +52,19 @@ module SymmetricEncryption
           raise(SymmetricEncryption::ConfigError,
                 "Symmetric Encryption key file: '#{file_name}' not found")
         end
-        unless correct_permissions?
-          raise(SymmetricEncryption::ConfigError,
-                "Symmetric Encryption key file '#{file_name}' has the wrong " \
-                "permissions: #{::File.stat(file_name).mode.to_s(8)}. Expected 100600 or 100400.")
-        end
-        unless owned?
-          raise(SymmetricEncryption::ConfigError,
-                "Symmetric Encryption key file '#{file_name}' has the wrong " \
-                "owner (#{stat.uid}) or group (#{stat.gid}). " \
-                "Expected it to be owned by current user " \
-                "#{ENV['USER'] || ENV.fetch('USERNAME', nil)}.")
+        unless bypass_file_checks?
+          unless correct_permissions?
+            raise(SymmetricEncryption::ConfigError,
+                  "Symmetric Encryption key file '#{file_name}' has the wrong " \
+                  "permissions: #{::File.stat(file_name).mode.to_s(8)}. Expected 100600 or 100400.")
+          end
+          unless owned?
+            raise(SymmetricEncryption::ConfigError,
+                  "Symmetric Encryption key file '#{file_name}' has the wrong " \
+                  "owner (#{stat.uid}) or group (#{stat.gid}). " \
+                  "Expected it to be owned by current user " \
+                  "#{ENV['USER'] || ENV.fetch('USERNAME', nil)}.")
+          end
         end
 
         data = read_from_file(file_name)
@@ -76,6 +78,10 @@ module SymmetricEncryption
       end
 
       private
+
+      def bypass_file_checks?
+        ENV.fetch('SYMMETRIC_ENCRYPTION_KEYSTORE_BYPASS_FILE_CHECKS', '').downcase == 'true'
+      end
 
       # Returns true if the file is owned by the user running this code and it
       # has the correct mode - readable and writable by its owner and no one

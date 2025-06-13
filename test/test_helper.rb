@@ -16,3 +16,13 @@ end
 
 # Load Symmetric Encryption keys
 SymmetricEncryption.load!(File.join(File.dirname(__FILE__), "config", "symmetric-encryption.yml"), "test")
+
+module SymmetricEncryption
+  def self.mock_env(h)
+    old_env_hash = ENV.to_hash
+    ENV.update(h)
+    yield
+  rescue
+    ENV.replace(old_env_hash)
+  end
+end
